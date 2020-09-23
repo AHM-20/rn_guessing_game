@@ -1,14 +1,29 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Button, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+	StyleSheet,
+	Text,
+	View,
+	Button,
+	TouchableWithoutFeedback,
+	Keyboard,
+	Alert,
+	Dimensions,
+	ScrollView,
+	KeyboardAvoidingView
+} from 'react-native';
 import Card from '../components/Card';
 import Input from '../components/Input';
 import NumberContainer from '../components/NumberContainer';
 import Colors from '../constants/colors';
+import BodyText from '../components/BodyText';
+import TitleText from '../components/TitleText';
+import MainButton from '../components/MainButton';
 
 const StartGameScreen = (props) => {
 	const [ enteredValue, setEnteredValue ] = useState('');
 	const [ confirmed, setConfirmed ] = useState(false);
 	const [ selectedNumber, setSelectedNumber ] = useState();
+	const [ buttonWidth, setButtonWidth ] = useState(Dimensions.get('window').width / 4);
 
 	const numberInputHandler = (inputText) => {
 		setEnteredValue(inputText.replace(/[^0-9]/g, ''));
@@ -18,6 +33,17 @@ const StartGameScreen = (props) => {
 		setEnteredValue('');
 		setConfirmed(false);
 	};
+
+	useEffect(() => {
+		const updateLayout = () => {
+			setButtonWidth(Dimensions.get('window').width / 4);
+		};
+
+		Dimensions.addEventListener('change', updateLayout);
+		return () => {
+			Dimensions.removeEventListener('change', updateLayout);
+		};
+	});
 
 	const confirmInputHandler = () => {
 		const chosenNumber = parseInt(enteredValue);
@@ -40,63 +66,74 @@ const StartGameScreen = (props) => {
 				<Text>You selected</Text>
 				<View>
 					<NumberContainer>{selectedNumber}</NumberContainer>
-					<Button title="START GAME" onPress={() => props.onStartGame(selectedNumber)} />
+					<MainButton onPress={() => props.onStartGame(selectedNumber)}>START GAME</MainButton>
 				</View>
 			</Card>
 		);
 	}
 	return (
-		<TouchableWithoutFeedback
-			onPress={() => {
-				Keyboard.dismiss();
-			}}
-		>
-			<View style={styles.screen}>
-				<Text style={styles.title}>Start a New Game!</Text>
-				<Card style={styles.inputContainer}>
-					<Text>Select a Number</Text>
-					<Input
-						style={styles.input}
-						blurOnSubmit
-						autoCapitalize="none"
-						autoCorrect={false}
-						keyboardType="number-pad"
-						maxLength={2}
-						onChangeText={numberInputHandler}
-						value={enteredValue}
-					/>
-					<View>
-						<View style={styles.buttonContainer}>
-							<View style={styles.button}>
-								<Button title="Reset" onPress={resetInputHandler} color={Colors.secondary} />
+		<ScrollView>
+			<KeyboardAvoidingView behavior="position" keyboardVerticalOffset="30">
+				<TouchableWithoutFeedback
+					onPress={() => {
+						Keyboard.dismiss();
+					}}
+				>
+					<View style={styles.screen}>
+						<TitleText style={styles.title}>Start a New Game!</TitleText>
+						<Card style={styles.inputContainer}>
+							<BodyText>Select a Number</BodyText>
+							<Input
+								style={styles.input}
+								blurOnSubmit
+								autoCapitalize="none"
+								autoCorrect={false}
+								keyboardType="number-pad"
+								maxLength={2}
+								onChangeText={numberInputHandler}
+								value={enteredValue}
+							/>
+							<View>
+								<View style={styles.buttonContainer}>
+									<View style={{ width: buttonWidth }}>
+										<Button title="Reset" onPress={resetInputHandler} color={Colors.secondary} />
+									</View>
+									<View style={{ width: buttonWidth }}>
+										<Button title="Confirm" onPress={confirmInputHandler} color={Colors.primary} />
+									</View>
+								</View>
 							</View>
-							<View style={styles.button}>
-								<Button title="Confirm" onPress={confirmInputHandler} color={Colors.primary} />
-							</View>
-						</View>
+						</Card>
+						{confirmedOutput}
 					</View>
-				</Card>
-				{confirmedOutput}
-			</View>
-		</TouchableWithoutFeedback>
+				</TouchableWithoutFeedback>
+			</KeyboardAvoidingView>
+		</ScrollView>
 	);
 };
 
 const styles = StyleSheet.create({
 	screen: { flex: 1, padding: 10, alignItems: 'center' },
-	title: { fontSize: 20, marginVertical: 10 },
+	title: { padding: 5, fontSize: 20, marginVertical: 10, fontFamily: 'open-sans-bold' },
 	inputContainer: {
-		width: 300,
-		maxWidth: '80%',
+		width: '80%',
+		//maxWidth: '80%',
+		maxWidth: '95%',
+		minWidth: 300,
 		alignItems: 'center'
 	},
 	buttonContainer: {
 		flexDirection: 'row',
-		width: '100%',
-		justifyContent: 'space-between',
-		paddingHorizontal: 15
+		justifyContent: 'space-around',
+		marginTop: Dimensions.get('window').height > 600 ? 20 : 5,
+		width: 400,
+		maxWidth: '90%'
+		//alignItems: 'center',
 	},
-	button: { width: 110 },
+	// button: {
+	// 	//	width: 100,
+	// 	width: Dimensions.get('window').width / 4
+	// },
 	input: { width: 50, textAlign: 'center' },
 	summaryContainer: { marginTop: 20, alignItems: 'center' }
 });
